@@ -4,8 +4,9 @@ const Sidebar = () => {
 
     const menu = [
         { name: "Trang chủ", path: "/home" },
+        { name: "Lịch học", path: "/calendar" },
+        { name: "Đăng Ký Học Phần", path: "/CourseRegistration" },
         { name: "Thông tin chung", path: "/Score" },
-        { name: "Lịch học", path: "/calendar" },,
         { name: "Học phí", path: "/Tuition" },
     ];
 

@@ -29,7 +29,7 @@ const CalendarView = ({ routineEvents, currentDate, setCurrentDate }) => {
     setCurrentDate(new Date(year, month + 1, 1));
   };
 
-  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weekdays = ['CN', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
   const today = new Date();
 
   // Check if the given day in the grid is today
@@ -60,14 +60,14 @@ const CalendarView = ({ routineEvents, currentDate, setCurrentDate }) => {
           onClick={() => setCurrentDate(new Date())}
           className="px-3 py-1 bg-green-500 text-white rounded-lg"
         >
-          Today {today.getDate()}
+          Hôm nay {today.getDate()}
         </button>
         <div className="flex items-center space-x-2">
           <button
             onClick={handlePrevMonth}
             className="px-3 py-1 bg-blue-500 text-white rounded-lg"
           >
-            Prev
+            Trước
           </button>
           <h2 className="text-lg font-bold">
             {currentDate.toLocaleString('default', { month: 'long' })} {year}
@@ -76,11 +76,11 @@ const CalendarView = ({ routineEvents, currentDate, setCurrentDate }) => {
             onClick={handleNextMonth}
             className="px-3 py-1 bg-blue-500 text-white rounded-lg"
           >
-            Next
+            Sau
           </button>
         </div>
         <button className="px-3 py-1 bg-blue-500 text-white rounded-lg">
-          Change routine
+          Lịch học
         </button>
       </div>
 
