@@ -1,25 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Thêm import này
 
 const RegistrationNavigate = () => {
-  // State to hold student data
+  const navigate = useNavigate(); // Khởi tạo navigate
   const [studentData, setStudentData] = useState(null);
 
   useEffect(() => {
-    // When your backend API is ready, replace this simulation
-    // with an actual API call, e.g.:
-    /*
-    fetch('/api/student-info')
-      .then(response => response.json())
-      .then(data => setStudentData(data))
-      .catch(error => console.error('Error fetching student data:', error));
-    */
-    // Simulated API response:
+    // Simulated API response
     setStudentData({
       name: 'Huỳnh Võ Công Lĩnh',
       gender: 'Nam',
       mssv: '20060611',
       status: 'Đang học',
-      avatar: '/portrait.jpg', // change to your image path or URL
+      avatar: '/portrait.jpg',
       studentInfo: {
         course: '2020 - 2021',
         educationLevel: 'Đại học',
@@ -33,22 +26,28 @@ const RegistrationNavigate = () => {
     });
   }, []);
 
-  // Optionally render a loading state until data is available
+  const handleLogout = () => {
+    // Thêm các xử lý đăng xuất ở đây nếu cần
+    // Ví dụ: xóa token, clear localStorage...
+    // localStorage.removeItem('token');
+    // localStorage.removeItem('userData');
+    
+    // Điều hướng về trang login
+    navigate('/login');
+  };
+
   if (!studentData) {
     return <div>Loading...</div>;
   }
 
-  // Destructure the dynamic fields from the fetched data
   const { name, gender, mssv, status, avatar, studentInfo } = studentData;
 
   return (
     <div id="contain" className="p-6">
       <section className="content py-4">
         <div className="max-w-6xl mx-auto">
-          {/* Top Section: Greeting & Navigation */}
           <div id="sec_thongtin" className="mb-8">
             <div className="flex flex-col md:flex-row items-start md:items-center border p-4 rounded shadow bg-white">
-              {/* Left Part: User Info & Avatar */}
               <div className="w-full md:w-1/3 flex">
                 <div className="flex-1">
                   <p className="text-sm">Xin chào!</p>
@@ -65,13 +64,12 @@ const RegistrationNavigate = () => {
                     <span className="font-semibold">Trạng thái:</span>
                     <span className="ml-1">{status}</span>
                   </p>
-                  <a
-                    href="/Account/LogOut"
-                    id="btnDangXuat"
+                  <button
+                    onClick={handleLogout}
                     className="mt-3 block w-full text-center bg-blue-500 hover:bg-blue-600 text-white py-2 rounded"
                   >
                     Đăng xuất
-                  </a>
+                  </button>
                 </div>
                 <div className="w-1/3 flex justify-center items-center ml-4">
                   <div className="avatar">
@@ -83,7 +81,6 @@ const RegistrationNavigate = () => {
                   </div>
                 </div>
               </div>
-              {/* Right Part: Navigation Links */}
               <div className="w-full md:w-2/3 mt-4 md:mt-0 flex justify-end">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <a
@@ -111,7 +108,6 @@ const RegistrationNavigate = () => {
               </div>
             </div>
           </div>
-          {/* Bottom Section: Detailed Student Info */}
           <div id="sec_hososv">
             <div className="info-account border p-4 rounded shadow bg-white">
               <h2 className="text-2xl font-bold mb-4">Thông tin sinh viên</h2>

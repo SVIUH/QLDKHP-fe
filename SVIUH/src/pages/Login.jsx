@@ -1,14 +1,20 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Email:", email);
-    console.log("Mật khẩu:", password);
+    
+    // Kiểm tra đăng nhập (ví dụ đơn giản)
+    if (email === "admin@gmail.com" && password === "123456") {
+      navigate("/home");
+    } else {
+      alert("Email hoặc mật khẩu không đúng!");
+    }
   };
 
   return (
@@ -69,6 +75,5 @@ const Login = () => {
     </div>
   );
 };
-
 
 export default Login;
