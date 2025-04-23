@@ -1,19 +1,38 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
+  const navigate = useNavigate();
+  const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Kiểm tra đăng nhập (ví dụ đơn giản)
-    if (email === "admin@gmail.com" && password === "123456") {
-      navigate("/home");
-    } else {
-      alert("Email hoặc mật khẩu không đúng!");
+
+    try {
+      const res = await fetch("http://localhost:3000/users/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ code, password }), // gửi code thay vì email
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data?.data?.token) {
+        localStorage.setItem("token", data.data.token); // lưu token nếu dùng Bearer Auth
+        toast.success("Đăng nhập thành công!", { position: "top-right" });
+        navigate("/"); // về trang chủ
+      } else {
+        toast.error("Đăng nhập thất bại: " + data.message, { position: "top-right" });
+      }
+    } catch (err) {
+      console.error("Lỗi đăng nhập:", err);
+      toast.error("Lỗi hệ thống", { position: "top-right" });
     }
   };
 
@@ -27,13 +46,13 @@ const Login = () => {
           </h2>
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label className="block text-gray-700 font-medium">Email</label>
+              <label className="block text-gray-700 font-medium">Mã số sinh viên</label>
               <input
-                type="email"
+                type="text"
                 className="w-full p-3 border rounded-full mt-1"
-                placeholder="example@gmail.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Nhập mã số sinh viên"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
                 required
               />
             </div>
