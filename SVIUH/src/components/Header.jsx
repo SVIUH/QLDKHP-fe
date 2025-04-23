@@ -145,7 +145,7 @@ export default function Header() {
             className="w-8 h-8 rounded-full"
           />
           <div>
-            <p className="font-semibold text-sm">Nguyễn Văn A</p>
+            <p className="font-semibold text-sm">Nguyễn Văn B</p>
             <p className="text-xs text-gray-500">Sinh viên</p>
           </div>
         </div>
