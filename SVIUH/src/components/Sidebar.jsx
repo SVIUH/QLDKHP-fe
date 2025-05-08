@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { FaSignOutAlt, FaUser } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
 
 const Sidebar = () => {
   const [user, setUser] = useState(null);
