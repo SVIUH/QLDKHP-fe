@@ -1,21 +1,24 @@
-import { Drawer } from "@mui/material";
+import { Drawer, Autocomplete, TextField } from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useEffect } from "react";
 import * as yup from "yup";
 import { toast } from "react-toastify";
-
 import {
   useCreateSubject,
   useUpdateSubject,
-  useSubjectList,      // để lấy danh sách làm prerequisite
+  useSubjectList, // để lấy danh sách làm prerequisite
 } from "../../../hooks/useSubjects";
 
 /* ---------- validate ---------- */
 const schema = yup.object({
-  subject_name: yup.string().required("Tên môn bắt buộc"),
-  credits: yup.number().min(1).required("Số tín chỉ?"),
-  term: yup.string().required("Học kỳ?"),
+  subject_name: yup
+    .string()
+    .max(200, "Tối đa 200 ký tự")
+    .matches(/^[\p{L}\d\s]+$/u, "Không chứa ký tự đặc biệt")
+    .required("Tên môn bắt buộc"),
+  credits: yup.number().min(1, "≥ 1").max(20, "≤ 20").required("Số tín chỉ?"),
+  term: yup.number().oneOf([1, 2, 3], "Chỉ 1, 2 hoặc 3").required("Học kỳ?"),
   theory: yup.number().min(0).required(),
   practice: yup.number().min(0).required(),
   isRequired: yup.boolean(),
@@ -47,7 +50,8 @@ export default function SubjectForm({ open, onClose, defaultValues }) {
       ...defaultValues,
       /* backend trả mảng đối tượng → map sang id */
       prerequisites:
-        defaultValues?.prerequisites?.map((p) => p.prerequisite_subject_id) || [],
+        defaultValues?.prerequisites?.map((p) => p.prerequisite_subject_id) ||
+        [],
     },
   });
 
@@ -66,18 +70,18 @@ export default function SubjectForm({ open, onClose, defaultValues }) {
 
   const onSubmit = (data) => {
     const body = {
-         subject: {
-           subject_name: data.subject_name,
-           credits:      data.credits,
-            term:         data.term,
-            isRequired:   data.isRequired,
-            theory:       data.theory,
-            practice:     data.practice,
-          },
-          prerequisites: data.prerequisites.map((id) => ({
-            prerequisite_subject_id: id,
-          })),
-        };
+      subject: {
+        subject_name: data.subject_name,
+        credits: data.credits,
+        term: data.term,
+        isRequired: data.isRequired,
+        theory: data.theory,
+        practice: data.practice,
+      },
+      prerequisites: data.prerequisites.map((id) => ({
+        prerequisite_subject_id: id,
+      })),
+    };
 
     const mutate = isEdit
       ? updateSubject.mutateAsync({ id: defaultValues.subject_id, ...body })
@@ -123,11 +127,18 @@ export default function SubjectForm({ open, onClose, defaultValues }) {
             <p className="text-red-600 text-sm">{errors.credits?.message}</p>
           </div>
           <div className="flex-1">
-            <input
+            <select
               {...register("term")}
-              placeholder="Học kỳ (vd 1-1st)"
               className="border p-2 rounded w-full"
-            />
+              defaultValue=""
+            >
+              <option value="" disabled hidden>
+                Chọn học kỳ
+              </option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">Học kỳ hè</option>
+            </select>
             <p className="text-red-600 text-sm">{errors.term?.message}</p>
           </div>
         </div>
@@ -148,7 +159,6 @@ export default function SubjectForm({ open, onClose, defaultValues }) {
           />
         </div>
 
-        {/* Bắt buộc? */}
         <label className="flex items-center gap-2">
           <input
             type="checkbox"
@@ -158,35 +168,47 @@ export default function SubjectForm({ open, onClose, defaultValues }) {
           <span>Môn bắt buộc</span>
         </label>
 
-        {/* Prerequisite multi-select */}
         <div>
           <label className="block text-sm mb-1 font-medium">
             Môn tiên quyết
           </label>
+
           <Controller
             control={control}
             name="prerequisites"
             render={({ field }) => (
-              <select
+              <Autocomplete
                 multiple
-                className="border p-2 rounded w-full h-32"
-                value={field.value}
-                onChange={(e) =>
-                  field.onChange(
-                    Array.from(e.target.selectedOptions, (o) =>
-                      Number(o.value)
-                    )
-                  )
+                options={subList.filter(
+                  (s) => s.subject_id !== defaultValues?.subject_id
+                )}
+                getOptionLabel={(o) => o.subject_name}
+                value={subList.filter((s) =>
+                  field.value?.includes(s.subject_id)
+                )}
+                onChange={(_, newValue) =>
+                  field.onChange(newValue.map((v) => v.subject_id))
                 }
-              >
-                {subList
-                  .filter((s) => s.subject_id !== defaultValues?.subject_id)
-                  .map((s) => (
-                    <option key={s.subject_id} value={s.subject_id}>
-                      {s.subject_name}
-                    </option>
-                  ))}
-              </select>
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    variant="outlined"
+                    placeholder="Chọn môn..."
+                    size="small"
+                  />
+                )}
+                renderTags={(selected, getTagProps) =>
+                  selected.map((option, index) => (
+                    <span
+                      key={option.subject_id}
+                      {...getTagProps({ index })}
+                      className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full flex items-center gap-1"
+                    >
+                      {option.subject_name}
+                    </span>
+                  ))
+                }
+              />
             )}
           />
         </div>

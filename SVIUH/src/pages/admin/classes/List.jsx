@@ -1,11 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import { toast } from "react-toastify";
-
-import {
-  useClassList,
-  useDeleteClass,
-} from "../../../hooks/useClasses";           // bạn sẽ tạo ở hooks
+import { useClassList, useDeleteClass } from "../../../hooks/useClasses"; // bạn sẽ tạo ở hooks
 import FormDrawer from "./FormDrawer";
 import ConfirmDelete from "./ConfirmDelete";
 
@@ -22,7 +18,17 @@ export default function AdminClassList() {
   };
 
   /* ----- query ----- */
-  const { data: rows = [], isLoading } = useClassList(filters);
+  const { data = [], isLoading } = useClassList(filters);
+
+  const rows = useMemo(
+    () =>
+      data.map((c) => ({
+        ...c,
+        subjectDisplay: c.subject_name || c.subject?.subject_name || "—",
+        capacityDisplay: `${c.current_capacity}/${c.max_capacity}`,
+      })),
+    [data]
+  );
 
   /* ----- drawer / delete ----- */
   const [openDrawer, setOpenDrawer] = useState(false);
@@ -35,22 +41,17 @@ export default function AdminClassList() {
     { field: "class_id", headerName: "ID", width: 90 },
     { field: "class_name", headerName: "Tên lớp", flex: 1 },
     {
-      field: "subject",
+      field: "subjectDisplay",
       headerName: "Môn học",
       flex: 1.2,
-      valueGetter: (params) => params?.value?.subject_name ?? "—",
     },
     { field: "professor_name", headerName: "Giảng viên", flex: 1 },
     { field: "year", headerName: "Năm", width: 80 },
     { field: "term", headerName: "HK", width: 70 },
     {
-      field: "capacity",
+      field: "capacityDisplay",
       headerName: "Sĩ số",
       width: 110,
-      valueGetter: (params) =>
-      params?.row
-       ? `${params.row.current_capacity}/${params.row.max_capacity}`
-       : "",
     },
     {
       field: "isEnrolling",
@@ -59,9 +60,7 @@ export default function AdminClassList() {
       renderCell: ({ value }) => (
         <span
           className={`px-2 py-1 rounded-full text-xs ${
-            value
-              ? "bg-green-200 text-green-800"
-              : "bg-red-200 text-red-800"
+            value ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
           }`}
         >
           {value ? "Mở" : "Đóng"}
