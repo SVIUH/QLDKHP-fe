@@ -11,3 +11,6 @@ export const updateClass = (id, body) =>
 
 export const deleteClass = (id) =>
   api.delete(`/admin/class/${id}`);
+
+export const getClassesBySubject = (subjectId) =>
+  api.get(`/classes/subject/${subjectId}`); 

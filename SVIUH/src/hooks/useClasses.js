@@ -30,3 +30,25 @@ export const useDeleteClass = () => {
     onSuccess: () => qc.invalidateQueries(["classes"]),
   });
 };
+
+/* get every subject that currently HAS class in a given year + term */
+export const useSubjectsHaveClass = (year, term) =>
+  useQuery({
+    queryKey: ["subjects-has-class", year, term],
+    queryFn: () =>
+      ClassAPI.getClasses({ year, term }).then((r) => {
+        // unique subjects only
+        const map = new Map();
+        r.data.forEach((c) => map.set(c.subject_id, c.subject));
+        return Array.from(map.values());
+      }),
+  });
+
+/* classes of ONE subject (pane #2) */
+export const useClassListBySubject = (subjectId) =>
+  useQuery({
+    enabled: !!subjectId,
+    queryKey: ["classes-by-subject", subjectId],
+    queryFn: () =>
+      ClassAPI.getClassesBySubject(subjectId).then((r) => r.data),
+  });

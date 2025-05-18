@@ -12,6 +12,7 @@ import AppLayout from "./components/AppLayout"; // thêm layout chính
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminClassList from "./pages/admin/classes/List";
+import ClassPage from "./pages/admin/classes/Page";
 import AdminSubjectList from "./pages/admin/subject/List";
 import AdminStudentList from "./pages/admin/students/List";
 const App = () => {
@@ -32,7 +33,7 @@ const App = () => {
                 <Route path="/grades" element={<Grades />} />
                 {/* Thêm các routes khác tại đây */}
                 <Route path="admin" element={<AdminDashboard />} />
-                <Route path="admin/class" element={<AdminClassList />} />
+                <Route path="admin/class" element={<ClassPage />} />
                 <Route path="admin/subject" element={<AdminSubjectList />} />
                 <Route path="admin/student" element={<AdminStudentList />} />
               </Routes>
