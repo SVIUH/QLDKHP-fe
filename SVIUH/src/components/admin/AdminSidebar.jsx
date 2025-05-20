@@ -6,19 +6,19 @@ import { toast } from "react-toastify";
 const AdminSidebar = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("adminToken");
-  const [admin] = useState(null);    // giữ state để không lỗi
+  const [admin] = useState(null); // giữ state để không lỗi
   /* ---------- menu định sẵn ---------- */
   const menu = [
     { name: "Dashboard", path: "/admin" },
-    { name: "Môn học",   path: "/admin/subject" },
-    { name: "Lớp HP",   path: "/admin/class" },
-    { name: "Sinh viên",path: "/admin/student" },
+    { name: "Môn học", path: "/admin/subject" },
+    { name: "Lớp HP", path: "/admin/class" },
+    { name: "Sinh viên", path: "/admin/student" },
+    { name: "Chat hỗ trỡ", path: "/admin/chat" },
   ];
 
   /* ---------- lấy profile admin ---------- */
   useEffect(() => {
     // if (!token) return;
-
     // (async () => {
     //   try {
     //     const res = await fetch("http://localhost:3000/admin/profile", {
@@ -45,9 +45,7 @@ const AdminSidebar = () => {
       <div className="flex items-center gap-3 mb-6">
         <FaUserShield size={28} />
         <div>
-          <h2 className="font-semibold">
-            {admin?.full_name || "Admin"}
-          </h2>
+          <h2 className="font-semibold">{admin?.full_name || "Admin"}</h2>
           <p className="text-xs text-gray-300">{admin?.email || ""}</p>
         </div>
       </div>
