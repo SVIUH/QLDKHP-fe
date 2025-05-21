@@ -21,7 +21,7 @@ const ChatBot = ({ onClose }) => {
     setError(null);
 
     try {
-      const response = await axios.post('http://localhost:5000/chat', {
+      const response = await axios.post('http://localhost:3000/chatbot', {
         question: input,
       });
       setMessages([...newMessages, { sender: 'bot', text: response.data.answer }]);
