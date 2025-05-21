@@ -35,7 +35,7 @@ export default function Header() {
         <FaSearch className="text-gray-400" size={18} />
         <input
           type="text"
-          placeholder="Search here..."
+          placeholder="Tìm kiếm môn học, thông báo..."
           className="ml-2 bg-transparent outline-none w-full text-gray-600"
         />
       </div>

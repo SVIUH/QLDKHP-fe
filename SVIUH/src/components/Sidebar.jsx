@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 const Sidebar = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
-    const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
   const menu = [
     { name: "Trang chủ", path: "/" },
@@ -14,6 +14,7 @@ const Sidebar = () => {
     { name: "Lịch học", path: "/schedule" },
     { name: "Điểm", path: "/grades" },
     { name: "Chương trình khung", path: "/curriculum" },
+    { name: "Chat yêu cầu hỗ trợ", path: "/student/chat" },
   ];
 
   useEffect(() => {
@@ -51,7 +52,7 @@ const Sidebar = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-  
+
       if (res.ok) {
         document.cookie = "token=; Max-Age=0"; // dọn sạch cookie phía client
         localStorage.removeItem("token");
@@ -66,7 +67,6 @@ const Sidebar = () => {
       toast.error("Có lỗi xảy ra khi đăng xuất.");
     }
   };
-  
 
   return (
     <aside className="w-64 h-screen bg-purple-700 text-white p-5 flex flex-col shadow-md">

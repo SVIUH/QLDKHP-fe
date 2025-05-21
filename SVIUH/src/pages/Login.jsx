@@ -79,6 +79,15 @@ const Login = () => {
           <p className="text-gray-600 text-sm mt-4 text-center">
             Chưa có tài khoản? <a href="#" className="text-purple-600">Đăng ký</a>
           </p>
+          <p className="text-gray-600 text-sm mt-4 text-center">
+        <span>Quản trị viên? </span>
+       <a
+           href="/admin/login"
+            className="text-purple-600 font-semibold hover:underline"
+          >
+            Đăng nhập Admin
+          </a>
+        </p>
         </div>
 
         {/* Hình ảnh minh họa */}

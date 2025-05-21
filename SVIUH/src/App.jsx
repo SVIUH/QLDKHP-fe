@@ -10,12 +10,20 @@ import Subject from "./pages/Subject";
 import Grades from "./pages/Grades";
 import Curriculum from "./pages/Curriculum";
 import AppLayout from "./components/AppLayout"; // thêm layout chính
-
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminClassList from "./pages/admin/classes/List";
+import ClassPage from "./pages/admin/classes/Page";
+import AdminSubjectList from "./pages/admin/subject/List";
+import AdminStudentList from "./pages/admin/students/List";
+import AdminChatPage from "./pages/admin/AdminChatPage";
+import StudentChatPage from "./pages/StudentChatPage";
 const App = () => {
   return (
     <>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
         <Route
           path="/*"
           element={
@@ -28,6 +36,12 @@ const App = () => {
                 <Route path="/grades" element={<Grades />} />
                 <Route path="/curriculum" element={<Curriculum />} />
                 {/* Thêm các routes khác tại đây */}
+                <Route path="admin" element={<AdminDashboard />} />
+                <Route path="admin/class" element={<ClassPage />} />
+                <Route path="admin/subject" element={<AdminSubjectList />} />
+                <Route path="admin/student" element={<AdminStudentList />} />
+                <Route path="admin/chat" element={<AdminChatPage />} />
+                <Route path="student/chat" element={<StudentChatPage />} />
               </Routes>
             </AppLayout>
           }
