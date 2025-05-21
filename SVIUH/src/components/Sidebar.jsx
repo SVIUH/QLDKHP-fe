@@ -13,6 +13,7 @@ const Sidebar = () => {
     { name: "Môn học", path: "/subject" },
     { name: "Lịch học", path: "/schedule" },
     { name: "Điểm", path: "/grades" },
+    { name: "Chương trình khung", path: "/curriculum" },
     { name: "Chat yêu cầu hỗ trợ", path: "/student/chat" },
   ];
 

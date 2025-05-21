@@ -8,6 +8,7 @@ import Profile from "./pages/Profile";
 import Schedule from "./pages/Schedule";
 import Subject from "./pages/Subject";
 import Grades from "./pages/Grades";
+import Curriculum from "./pages/Curriculum";
 import AppLayout from "./components/AppLayout"; // thêm layout chính
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -33,6 +34,7 @@ const App = () => {
                 <Route path="/schedule" element={<Schedule />} />
                 <Route path="/subject" element={<Subject />} />
                 <Route path="/grades" element={<Grades />} />
+                <Route path="/curriculum" element={<Curriculum />} />
                 {/* Thêm các routes khác tại đây */}
                 <Route path="admin" element={<AdminDashboard />} />
                 <Route path="admin/class" element={<ClassPage />} />
