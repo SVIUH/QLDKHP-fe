@@ -15,6 +15,8 @@ import AdminClassList from "./pages/admin/classes/List";
 import ClassPage from "./pages/admin/classes/Page";
 import AdminSubjectList from "./pages/admin/subject/List";
 import AdminStudentList from "./pages/admin/students/List";
+import AdminChatPage from "./pages/admin/AdminChatPage";
+import StudentChatPage from "./pages/StudentChatPage";
 const App = () => {
   return (
     <>
@@ -36,6 +38,8 @@ const App = () => {
                 <Route path="admin/class" element={<ClassPage />} />
                 <Route path="admin/subject" element={<AdminSubjectList />} />
                 <Route path="admin/student" element={<AdminStudentList />} />
+                <Route path="admin/chat" element={<AdminChatPage />} />
+                <Route path="student/chat" element={<StudentChatPage />} />
               </Routes>
             </AppLayout>
           }
