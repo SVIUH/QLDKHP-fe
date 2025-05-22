@@ -1,0 +1,28 @@
+FROM node:21-alpine3.18
+
+# Tạo thư mục làm việc
+WORKDIR /app/cnm-server
+
+# Copy file cấu hình
+COPY package*.json ./
+COPY prisma ./prisma/
+COPY .env ./
+COPY tsconfig.json ./
+
+# Cài dependencies
+RUN npm install
+
+# Tạo Prisma client
+RUN npx prisma generate
+
+# Copy source code
+COPY . .
+
+# Build project
+RUN npm run build
+
+# Áp dụng schema vào DB (không cần migration, push đủ rồi)
+# RUN npx prisma db push
+
+# Khởi chạy app
+CMD ["node", "dist/main.js"]
