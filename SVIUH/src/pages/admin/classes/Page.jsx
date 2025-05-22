@@ -4,13 +4,15 @@ import {
   useClassListBySubject,
   useDeleteClass,
 } from "../../../hooks/useClasses";
+import { useClassList } from "../../../hooks/useClasses";
 import SubjectTable from "./SubjectTable";
 import ClassTable from "./ClassTable";
 import DetailTable from "./DetailTable";
 import FormDrawer from "./FormDrawer";
 import ConfirmDelete from "./ConfirmDelete";
 import { toast } from "react-toastify";
-
+import AiGeneratorDrawer from "./AiGeneratorDrawer";
+import { useAiGenerate } from "../../../hooks/useAiClasses";
 export default function ClassPage() {
   /* ---------------- filter bar ---------------- */
   const currentYear = new Date().getFullYear();
@@ -32,12 +34,13 @@ export default function ClassPage() {
 
   /* ---------------- CRUD ---------------- */
   const [openDrawer, setOpenDrawer] = useState(false);
+  /* ---------------- AI generator ---------------- */
+  const [openGen, setOpenGen] = useState(false);
   const { mutate: deleteClass } = useDeleteClass();
   const [delId, setDelId] = useState(null);
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Filter */}
       <div className="flex gap-4 items-center">
         <select
           className="border p-2 rounded"
@@ -69,8 +72,13 @@ export default function ClassPage() {
         >
           + Thêm lớp
         </button>
+        <button
+          onClick={() => setOpenGen(true)}
+          className="bg-emerald-600 text-white px-4 py-2 rounded flex items-center gap-1"
+        >
+          ⚡ Tạo nhanh lớp HP +{" "}
+        </button>
       </div>
-
       {/* ---------------- Pane 1 ---------------- */}
       <section>
         <h3 className="font-semibold mb-2">Môn học có lớp học phần</h3>
@@ -83,7 +91,6 @@ export default function ClassPage() {
           }}
         />
       </section>
-
       {/* ---------------- Pane 2 ---------------- */}
       {selectedSubject && (
         <section>
@@ -97,7 +104,6 @@ export default function ClassPage() {
           />
         </section>
       )}
-
       {/* ---------------- Pane 3 ---------------- */}
       {selectedClass && (
         <section>
@@ -105,8 +111,6 @@ export default function ClassPage() {
           <DetailTable details={selectedClass.details} />
         </section>
       )}
-
-      {/* Drawer tạo / sửa */}
       {openDrawer && (
         <FormDrawer
           open={openDrawer}
@@ -114,7 +118,6 @@ export default function ClassPage() {
           defaultValues={null}
         />
       )}
-
       {/* Modal xoá (sử dụng lại) */}
       {delId && (
         <ConfirmDelete
@@ -128,6 +131,9 @@ export default function ClassPage() {
           }
           onCancel={() => setDelId(null)}
         />
+      )}
+      {openGen && (
+        <AiGeneratorDrawer open={openGen} onClose={() => setOpenGen(false)} />
       )}
     </div>
   );

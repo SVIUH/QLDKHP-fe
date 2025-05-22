@@ -9,7 +9,9 @@ import {
   useClassList,
 } from "../../../hooks/useClasses";
 import { useSubjectList } from "../../../hooks/useSubjects";
+import { useQueryClient } from "@tanstack/react-query";
 
+/* ---------- static data ---------- */
 const BLOCK_LETTERS = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"];
 const FLOORS = [1, 2, 3];
 const ROOMS = Array.from({ length: 15 }, (_, i) =>
@@ -20,26 +22,19 @@ const TYPES = [
   { v: "LT", label: "Lý thuyết" },
   { v: "TH", label: "Thực hành" },
 ];
-const today = new Date();
-const currentYear = today.getFullYear();
-function isTermPast(term, year) {
-  const start = new Date(
-    year,
-    term === 1 ? 7 : term === 2 ? 0 : 4, // 7 = Aug, 0 = Jan, 4 = May
-    1
-  );
-  return start < today;
-}
+const now = new Date();
+const currentYear = now.getFullYear();
+const isTermPast = (term, year) => {
+  const start = new Date(year, term === 1 ? 7 : term === 2 ? 0 : 4, 1);
+  return start < now;
+};
+
+/* ---------- Yup schema ---------- */
 const detailSchema = yup.object({
   type: yup.string().oneOf(["LT", "TH"]).required(),
   day: yup.string().oneOf(DAYS).required(),
   start: yup.number().min(1).max(16).required(),
-  end: yup
-    .number()
-    .min(1)
-    .max(16)
-    .moreThan(yup.ref("start"), "Tiết kết thúc > bắt đầu")
-    .required(),
+  end: yup.number().min(1).max(16).moreThan(yup.ref("start")).required(),
   block: yup.string().oneOf(BLOCK_LETTERS).required(),
   floor: yup.number().oneOf(FLOORS).required(),
   room_no: yup.string().oneOf(ROOMS).required(),
@@ -53,31 +48,37 @@ const schema = yup.object({
     .required(),
   subject_id: yup.number().required(),
   professor_name: yup.string().max(100).required(),
-  year: yup
-    .number()
-    .min(currentYear, `Không nhỏ hơn ${currentYear}`)
-    .max(2100)
-    .required(),
+  year: yup.number().min(currentYear).max(2100).required(),
   term: yup
     .number()
     .oneOf([1, 2, 3])
     .required()
-    .test("term-not-past", "Học kỳ đã trôi qua", function (value) {
-      const y = this.parent.year || currentYear;
-      return !isTermPast(value, y);
-    }),
+    .test(
+      "term-valid",
+      "Học kỳ đã trôi qua",
+      (v, ctx) => !isTermPast(v, ctx.parent.year || currentYear)
+    ),
   max_capacity: yup.number().min(1).max(500).required(),
-  details: yup.array().of(detailSchema).min(1, "Thêm ít nhất 1 lịch học"),
+  details: yup.array().of(detailSchema).min(1),
 });
 
-export default function FormDrawer({ open, onClose, defaultValues }) {
-  const isEdit = !!defaultValues;
+/* =================================================================== */
+export default function FormDrawer({
+  open,
+  onClose,
+  defaultValues,
+  onSubmitOverride,
+}) {
+  const isEdit = !!defaultValues?.class_id;
+  const qc = useQueryClient(); // <-- NEW
+
   const { data: subjects = [] } = useSubjectList();
   const { data: allClasses = [] } = useClassList({});
   const professorSuggest = [
     ...new Set(allClasses.map((c) => c.professor_name)),
   ];
 
+  /* -------------- react-hook-form -------------- */
   const {
     control,
     register,
@@ -105,34 +106,53 @@ export default function FormDrawer({ open, onClose, defaultValues }) {
       ...defaultValues,
     },
   });
-
   const { fields, append, remove } = useFieldArray({
     control,
     name: "details",
   });
+
+  /* -------------- mutations -------------- */
   const create = useCreateClass();
   const update = useUpdateClass();
 
-  const onSubmit = (raw) => {
-    const classDetails = raw.details.map((d) => {
-      const room_name = `${d.block}${d.floor}.${d.room_no}`;
-      const study_time = `${d.type} - ${d.day}(T${d.start} -> T${d.end})`;
-      return {
-        study_time,
-        group_practice: d.group_practice,
-        room_name,
-        towner: d.block,
-      };
+  /* -------------- submit -------------- */
+  const invalidateAll = () =>
+    qc.invalidateQueries({
+      predicate: (q) =>
+        ["classes", "classes-by-subject", "subjects-has-class"].includes(
+          q.queryKey[0]
+        ),
     });
+
+  const onSubmit = async (raw) => {
+    const classDetails = raw.details.map((d) => ({
+      study_time: `${d.type} - ${d.day}(T${d.start} -> T${d.end})`,
+      group_practice: d.group_practice,
+      room_name: `${d.block}${d.floor}.${d.room_no}`,
+      towner: d.block,
+    }));
 
     const payload = {
       ...raw,
+      term: Number(raw.term), // đảm bảo number
       classDetails,
       status: true,
       isEnrolling: true,
     };
     delete payload.details;
 
+    /* --- override (dùng trong AI-generator) --- */
+    if (onSubmitOverride) {
+      try {
+        await onSubmitOverride(payload);
+        invalidateAll();
+        reset();
+        onClose?.();
+      } catch {}
+      return;
+    }
+
+    /* --- create / update --- */
     const action = isEdit
       ? update.mutateAsync({
           id: defaultValues.class_id,
@@ -141,13 +161,30 @@ export default function FormDrawer({ open, onClose, defaultValues }) {
         })
       : create.mutateAsync(payload);
 
-    action.then(() => {
-      toast.success(isEdit ? "Đã cập nhật lớp!" : "Đã tạo lớp!");
-      reset();
-      onClose();
-    });
+    action
+      .then(() => {
+        toast.success(isEdit ? "Đã cập nhật lớp!" : "Đã tạo lớp!");
+        invalidateAll(); // <-- NEW
+        reset();
+        onClose();
+      })
+      .catch(() => toast.error("Lưu thất bại"));
   };
 
+  /* -------------- helpers -------------- */
+  const addDefaultDetail = () =>
+    append({
+      type: "LT",
+      day: "Thứ 2",
+      start: 1,
+      end: 3,
+      block: "A",
+      floor: 1,
+      room_no: "01",
+      group_practice: 1,
+    });
+
+  /* ======================== UI ======================== */
   return (
     <Drawer anchor="right" open={open} onClose={onClose}>
       <form
@@ -158,7 +195,7 @@ export default function FormDrawer({ open, onClose, defaultValues }) {
           {isEdit ? "Cập nhật lớp" : "Thêm lớp"}
         </h2>
 
-        {/* -------- Thông tin chung -------- */}
+        {/* ----- thông tin chung ----- */}
         <TextField
           label="Tên lớp"
           size="small"
@@ -171,7 +208,13 @@ export default function FormDrawer({ open, onClose, defaultValues }) {
           name="subject_id"
           control={control}
           render={({ field }) => (
-            <TextField {...field} select label="Môn học" size="small">
+            <TextField
+              {...field}
+              select
+              value={field.value ?? ""}
+              label="Môn học"
+              size="small"
+            >
               {subjects.map((s) => (
                 <MenuItem key={s.subject_id} value={s.subject_id}>
                   {s.subject_name}
@@ -191,8 +234,8 @@ export default function FormDrawer({ open, onClose, defaultValues }) {
               value={field.value || null}
               onChange={(_, v) => field.onChange(v)}
               onInputChange={(_, v) => field.onChange(v)}
-              renderInput={(params) => (
-                <TextField {...params} label="Giảng viên" size="small" />
+              renderInput={(p) => (
+                <TextField {...p} label="Giảng viên" size="small" />
               )}
             />
           )}
@@ -203,47 +246,72 @@ export default function FormDrawer({ open, onClose, defaultValues }) {
             label="Năm"
             type="number"
             size="small"
-            {...register("year")}
+            {...register("year", { valueAsNumber: true })}
           />
-          <TextField {...register("term")} select label="Học kỳ" size="small">
-            {[1, 2, 3].map((t) => (
-              <MenuItem
-                key={t}
-                value={t}
-                disabled={isTermPast(t, watch("year") || currentYear)}
+
+          <Controller
+            name="term"
+            control={control}
+            rules={{ required: true }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                select
+                value={field.value ?? ""}
+                onChange={(e) => field.onChange(Number(e.target.value))} // number!
+                label="Học kỳ"
+                size="small"
               >
-                {t === 3 ? "3 (Hè)" : t}
-              </MenuItem>
-            ))}
-          </TextField>
+                {[1, 2, 3].map((t) => (
+                  <MenuItem
+                    key={t}
+                    value={t}
+                    disabled={isTermPast(t, watch("year") || currentYear)}
+                  >
+                    {t === 3 ? "3 (Hè)" : t}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
+          />
+
           <TextField
             label="Sĩ số tối đa"
             type="number"
             size="small"
-            {...register("max_capacity")}
+            {...register("max_capacity", { valueAsNumber: true })}
           />
         </div>
 
-        {/* -------- Lịch học -------- */}
+        {/*  -------- lịch học -------- */}
+        {/* (phần còn lại giữ nguyên – KHÔNG thay đổi) */}
+        {/* ----------------------------------------------------------------- */}
+        {/* ---------- Lịch học ---------- */}
         <h4 className="font-semibold mt-3">Lịch học</h4>
 
         {fields.map((item, idx) => {
-          /* helpers */
           const blockPath = `details.${idx}.block`;
           const floorPath = `details.${idx}.floor`;
           const roomPath = `details.${idx}.room_no`;
+
           return (
             <div
               key={item.id}
               className="border p-3 rounded-md bg-gray-50 flex flex-col gap-3"
             >
-              {/* row 1: Type + Day + Tiết */}
+              {/* row 1 */}
               <div className="flex gap-2">
                 <Controller
                   name={`details.${idx}.type`}
                   control={control}
                   render={({ field }) => (
-                    <TextField {...field} select label="Loại" size="small">
+                    <TextField
+                      {...field}
+                      select
+                      value={field.value ?? ""}
+                      label="Loại"
+                      size="small"
+                    >
                       {TYPES.map((t) => (
                         <MenuItem key={t.v} value={t.v}>
                           {t.label}
@@ -257,7 +325,13 @@ export default function FormDrawer({ open, onClose, defaultValues }) {
                   name={`details.${idx}.day`}
                   control={control}
                   render={({ field }) => (
-                    <TextField {...field} select label="Ngày" size="small">
+                    <TextField
+                      {...field}
+                      select
+                      value={field.value ?? ""}
+                      label="Ngày"
+                      size="small"
+                    >
                       {DAYS.map((d) => (
                         <MenuItem key={d} value={d}>
                           {d}
@@ -266,6 +340,7 @@ export default function FormDrawer({ open, onClose, defaultValues }) {
                     </TextField>
                   )}
                 />
+
                 <TextField
                   label="Từ tiết"
                   type="number"
@@ -282,7 +357,7 @@ export default function FormDrawer({ open, onClose, defaultValues }) {
                 />
               </div>
 
-              {/* row 2: Block - Floor - Room + group */}
+              {/* row 2 */}
               <div className="flex gap-2">
                 <Controller
                   name={blockPath}
@@ -307,7 +382,13 @@ export default function FormDrawer({ open, onClose, defaultValues }) {
                   name={floorPath}
                   control={control}
                   render={({ field }) => (
-                    <TextField {...field} select label="Tầng" size="small">
+                    <TextField
+                      {...field}
+                      select
+                      value={field.value ?? ""}
+                      label="Tầng"
+                      size="small"
+                    >
                       {FLOORS.map((f) => (
                         <MenuItem key={f} value={f}>
                           {f}
@@ -321,7 +402,13 @@ export default function FormDrawer({ open, onClose, defaultValues }) {
                   name={roomPath}
                   control={control}
                   render={({ field }) => (
-                    <TextField {...field} select label="Phòng" size="small">
+                    <TextField
+                      {...field}
+                      select
+                      value={field.value ?? ""}
+                      label="Phòng"
+                      size="small"
+                    >
                       {ROOMS.map((r) => (
                         <MenuItem key={r} value={r}>
                           {r}
@@ -355,18 +442,7 @@ export default function FormDrawer({ open, onClose, defaultValues }) {
 
         <button
           type="button"
-          onClick={() =>
-            append({
-              type: "LT",
-              day: "Thứ 2",
-              start: 1,
-              end: 3,
-              block: "A",
-              floor: 1,
-              room_no: "01",
-              group_practice: 0,
-            })
-          }
+          onClick={addDefaultDetail}
           className="text-indigo-600"
         >
           + Thêm lịch
@@ -376,13 +452,13 @@ export default function FormDrawer({ open, onClose, defaultValues }) {
           <p className="text-red-600 text-sm">{errors.details.message}</p>
         )}
 
-        {/* ---- action ---- */}
+        {/* ---------- actions ---------- */}
         <div className="flex gap-3 mt-4">
           <button
             type="submit"
             className="flex-1 bg-indigo-600 text-white py-2 rounded"
           >
-            {isEdit ? "Lưu" : "Tạo"}
+            {isEdit || onSubmitOverride ? "Lưu" : "Tạo"}
           </button>
           <button
             type="button"

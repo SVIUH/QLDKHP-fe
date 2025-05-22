@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { useClassList, useDeleteClass } from "../../../hooks/useClasses"; // bạn sẽ tạo ở hooks
 import FormDrawer from "./FormDrawer";
 import ConfirmDelete from "./ConfirmDelete";
-
+import AiGeneratorDrawer from "./AiGeneratorDrawer";
 export default function AdminClassList() {
   /* ----- filter ----- */
   const [year, setYear] = useState("");
@@ -35,7 +35,7 @@ export default function AdminClassList() {
   const [editing, setEditing] = useState(null);
   const [delId, setDelId] = useState(null);
   const { mutate: deleteClass } = useDeleteClass();
-
+  const [openGen, setOpenGen] = useState(false);
   /* ----- datagrid columns ----- */
   const columns = [
     { field: "class_id", headerName: "ID", width: 90 },
@@ -131,7 +131,14 @@ export default function AdminClassList() {
           className="px-4 py-2 bg-indigo-600 text-white rounded"
           onClick={() => setOpenDrawer(true)}
         >
-          + Thêm lớp
+          Thêm lớp học
+        </button>
+
+        <button
+          className="px-4 py-2 bg-emerald-600 text-white rounded"
+          onClick={() => setOpenGen(true)}
+        >
+          ⚡ Tạo nhanh lớp HP
         </button>
       </div>
 
@@ -172,6 +179,10 @@ export default function AdminClassList() {
           }
           onCancel={() => setDelId(null)}
         />
+      )}
+      {/* AI generator */}
+      {openGen && (
+        <AiGeneratorDrawer open={openGen} onClose={() => setOpenGen(false)} />
       )}
     </div>
   );
